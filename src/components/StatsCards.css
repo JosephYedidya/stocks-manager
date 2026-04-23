@@ -1,0 +1,141 @@
+/* StatsCards - Enhanced Glassmorphism for Admin Dashboard */
+
+.stats-cards-container {
+  margin-bottom: 24px;
+}
+
+.stats-card {
+  border-radius: var(--border-radius, 20px);
+  padding: 24px;
+  text-align: center;
+  transition: var(--transition, all 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+  background: var(--glass-bg, rgba(255, 255, 255, 0.25));
+  backdrop-filter: var(--glass-backdrop, blur(10px));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.18));
+  box-shadow: var(--glass-shadow, 0 8px 32px 0 rgba(31, 38, 135, 0.37));
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  height: 100%;
+}
+
+.stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+  opacity: 0.8;
+}
+
+.stats-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.stats-card:active {
+  transform: translateY(-4px);
+}
+
+.card-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.stats-title {
+  margin: 12px 0 8px;
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+[data-theme='dark'] .stats-title {
+  color: var(--text-secondary, #d1d5db);
+}
+
+.stats-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+[data-theme='dark'] .stats-value {
+  color: var(--text-primary, #f9fafb);
+}
+
+.stats-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #6b7280);
+  opacity: 0.8;
+}
+
+/* Card-specific gradients (fallback to CSS vars) */
+.revenue-card {
+  --card-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.sales-card {
+  --card-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.stock-card {
+  --card-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.top-product-card {
+  --card-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+/* Progress Bars */
+.stats-progress {
+  margin-top: 12px;
+}
+
+.stats-progress .ant-progress-inner {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+}
+
+.stats-progress .ant-progress-bg {
+  border-radius: 12px;
+  background: var(--primary-gradient, #667eea) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats-card {
+    margin-bottom: 16px;
+    padding: 20px;
+  }
+  
+  .stats-value {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-card {
+    padding: 16px;
+  }
+}
+
+/* Pulsing animation for loading/active */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.stats-card.loading {
+  animation: pulse 1.5s infinite;
+}
+
+/* Integration with AdminDashboard glass theme */
+.stats-card {
+  composes: glass-card from './AdminDashboard.css';
+}

@@ -1,0 +1,314 @@
+/* Admin Dashboard - Modern Glassmorphism Redesign */
+
+/* Root Variables */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  --glass-backdrop: blur(10px);
+  --primary-gradient: rgb(14,30,172);
+  --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border-radius: 20px;<div class="ant-card ant-card-bordered glass-card css-dev-only-do-not-override-ch9ese css-var-_r_0_">
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme='dark'] {
+  --glass-bg: rgba(55, 65, 81, 0.4);
+  --glass-border: rgba(75, 85, 99, 0.3);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+}
+
+/* Layout */
+.admin-dashboard {
+  padding: 24px;
+  animation: fadeIn 0.6s ease-out;
+  min-height: 100vh;
+}
+
+.hero-section {
+  background: var(--primary-gradient);
+  border-radius: var(--border-radius);
+  padding: 32px;
+  margin-bottom: 32px;
+  color: white;
+  box-shadow: var(--glass-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass-backdrop);
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .hero-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* Grid Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+.sidebar {
+  position: sticky;
+  top: 24px;
+  height: fit-content;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  box-shadow: var(--glass-shadow);
+}
+
+.nav-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-secondary);
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+  transform: translateX(4px);
+}
+
+/* Glass Cards */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--glass-shadow);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--primary-gradient);
+  opacity: 0.5;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Tables */
+.ant-table {
+  background: transparent !important;
+}
+
+.ant-table-thead > tr > th {
+  background: var(--glass-bg) !important;
+  border: none !important;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.product-name {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.product-price {
+  color: #10b981;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.category-tag {
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  font-weight: 500;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.variant-tag {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* Buttons */
+.action-btn {
+  border-radius: 12px;
+  height: 36px;
+  font-weight: 500;
+}
+
+.edit-btn {
+  background: var(--success-gradient);
+  border: none;
+}
+
+.delete-btn {
+  background: var(--danger-gradient);
+  border: none;
+}
+
+/* Modals */
+.ant-modal-content {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--glass-shadow);
+}
+
+.ant-modal-header {
+  background: var(--primary-gradient);
+  border-radius: calc(var(--border-radius) - 1px) calc(var(--border-radius) - 1px) 0 0;
+  border-bottom: none;
+  color: white;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.section-slide {
+  animation: slideIn 0.4s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-dashboard {
+    padding: 16px;
+  }
+  
+  .glass-card {
+    border-radius: 16px;
+  }
+  
+  .hero-section {
+    padding: 24px 20px;
+  }
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.quick-actions .ant-btn {
+  border-radius: 12px;
+  height: 44px;
+  font-weight: 500;
+}
+
+/* Search Bar */
+.search-container {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 8px 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Tabbed Sections */
+.tabbed-content > .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+.ant-tabs-tab {
+  border-radius: 12px 12px 0 0 !important;
+  margin-right: 4px;
+}
+
+.ant-tabs-tab-active {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+}

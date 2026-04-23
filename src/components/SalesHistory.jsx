@@ -1,0 +1,195 @@
+import { useState, useEffect } from 'react';
+import { Table, Card, Button, Empty, Tag, Typography } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
+import { getSalesOffline } from '../api/offlineClient.js';
+
+const { Text } = Typography;
+
+export default function SalesHistory({ products = [], darkMode }) {
+  const isDark = darkMode === 'dark';
+  const [sales, setSales] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadSales = async () => {
+    setLoading(true);
+    try {
+      const res = await getSalesOffline();
+      const enrichedData = (res.data || []).map(sale => ({
+        ...sale,
+        productName: sale.productName || 'N/A',
+        productPrice: Number(sale.productPrice || 0),
+        quantity: Number(sale.quantity || 0)
+      }));
+      setSales(enrichedData);
+    } catch {
+      console.log('Using cached sales (offline)');
+      setSales([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSales();
+  }, []);
+
+  const textColor = isDark ? '#f9fafb' : '#111827';
+  const cardBg = isDark ? '#374151' : 'white';
+  const borderColor = isDark ? '#4b5563' : '#e5e7eb';
+  const shadow = isDark ? '0 4px 20px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.08)';
+
+  const columns = [
+    {
+      title: 'Produit',
+      dataIndex: 'productName',
+      key: 'productName',
+      width: 180,
+      fixed: 'left',
+      render: (name, record) => {
+        const product = products.find(p => p._id === record.productId);
+        return (
+          <Text style={{ color: textColor, fontWeight: 500 }} ellipsis={{ tooltip: true }}>
+            {name || product?.name || 'N/A'}
+          </Text>
+        );
+      }
+    },
+    {
+      title: 'Prix unitaire',
+      dataIndex: 'productPrice',
+      key: 'price',
+      width: 130,
+      render: (price) => (
+        <Tag color="blue" style={{ color: isDark ? '#93c5fd' : '#1890ff', background: isDark ? '#1e40af20' : '#3b82f680' }}>
+          {price.toLocaleString('fr-FR')} FCFA
+        </Tag>
+      )
+    },
+    {
+      title: 'Variante',
+      dataIndex: 'variantType',
+      key: 'variantType',
+      width: 120,
+      render: (variant) => (
+        <Tag color="purple" style={{ color: textColor }}>
+          {variant || 'Standard'}
+        </Tag>
+      )
+    },
+    {
+      title: 'Qté',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      width: 80,
+      align: 'center',
+      render: (qty) => (
+        <Tag color="green" style={{ color: 'white', fontWeight: 'bold' }}>
+          {qty}
+        </Tag>
+      )
+    },
+    {
+      title: 'Total',
+      key: 'total',
+      width: 130,
+      align: 'right',
+      render: (_, record) => {
+        const total = (Number(record.productPrice || 0) * Number(record.quantity || 0));
+        return (
+          <Text strong style={{ color: isDark ? '#4ade80' : '#52c41a', fontSize: 16 }}>
+            {total.toLocaleString('fr-FR')} FCFA
+          </Text>
+        );
+      }
+    },
+    {
+      title: 'Caissier',
+      dataIndex: 'soldBy',
+      key: 'soldBy',
+      width: 160,
+      render: (seller) => (
+        <Text style={{ color: isDark ? '#d1d5db' : '#6b7280' }} ellipsis={{ tooltip: true }}>
+          {seller || 'N/A'}
+        </Text>
+      )
+    },
+    {
+      title: 'Date',
+      key: 'date',
+      width: 170,
+      render: (_, record) => {
+        const date = new Date(record.date);
+        return (
+          <Text style={{ color: isDark ? '#d1d5db' : '#6b7280', fontSize: 13 }}>
+            {date.toLocaleDateString('fr-FR', {
+              weekday: 'short',
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </Text>
+        );
+      }
+    }
+  ];
+
+  return (
+    <Card 
+      title="📜 Historique des Ventes" 
+      style={{ 
+        marginTop: 24, 
+        borderRadius: 16,
+        background: cardBg,
+        border: `1px solid ${borderColor}`,
+        boxShadow: shadow,
+        wdith: '95%',
+        maxWidth: 1200,
+        margin: '24px auto'
+      }}
+      extra={
+        <Button 
+          icon={<ReloadOutlined />} 
+          onClick={loadSales} 
+          loading={loading}
+          type="primary"
+          size="small"
+        >
+          Actualiser
+        </Button>
+      }
+    >
+      {sales.length === 0 ? (
+        <Empty 
+          description="Aucune vente enregistrée. Faites votre première vente!" 
+          style={{ margin: 40 }}
+        />
+      ) : (
+        <div style={{ width: '100%', overflowX: 'auto' }}>
+          <Table
+            columns={columns}
+            dataSource={sales}
+            rowKey="_id"
+            loading={loading}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: false,
+              showQuickJumper: false,
+              showTotal: (total) => `Total ${total} vente${total > 1 ? 's' : ''}`,
+              position: ['bottomCenter']
+            }}
+            scroll={{ x: 1200, y: 400 }}
+            size="small"
+            bordered={false}
+            rowHoverable={true}
+            sticky={true}
+            tableLayout="fixed"
+            style={{ fontSize: 14 }}
+          />
+        </div>
+      )}
+    </Card>
+  );
+}
+
