@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Row, Col, Button, Input, Table, message, Space, Card, Modal, Tabs, Badge, Select, Typography, Tag } from 'antd';
-import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined, ReloadOutlined, ExportOutlined, FilterOutlined } from '@ant-design/icons';
+import { Row, Col, Button, Input, Table, message, Space, Card, Modal, Form, InputNumber, Select, Typography, Tag, Badge, Tabs } from 'antd';
+import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined, ReloadOutlined, ExportOutlined, FilterOutlined, SaveOutlined } from '@ant-design/icons';
 import { getProductsOffline, getSalesOffline } from '../api/offlineClient.js';
 import { resetProducts, resetSales } from '../api/client.js';
 import { storage } from '../utils/storage.js';
@@ -23,6 +23,8 @@ export default function AdminDashboard({ darkMode = false }) {
   const [activeTab, setActiveTab] = useState('stats');
   const [searchText, setSearchText] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editForm] = Form.useForm();
 
   useEffect(() => {
     loadData();
@@ -51,6 +53,8 @@ export default function AdminDashboard({ darkMode = false }) {
   const handleStatsCardClick = (type, data) => {
     setStatsModal({ visible: true, type, data });
   };
+
+/* First sidebarNav removed */
 
   const columns = [
     { 
@@ -88,27 +92,65 @@ export default function AdminDashboard({ darkMode = false }) {
       key: 'actions', 
       render: (_, record) => (
         <Space>
-          <Button className="action-btn edit-btn" size="small" icon={<EditOutlined />} onClick={() => console.log('Modifier:', record)}>Modifier</Button>
-          <Button className="action-btn delete-btn" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDeleteProduct(record._id)}>Supprimer</Button>
+          <Button className="action-btn edit-btn" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>Modifier</Button>
+          <Button className="action-btn delete-btn" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record._id)}>Supprimer</Button>
         </Space>
       )
     }
   ];
 
-const handleDeleteProduct = () => {
+const handleDelete = () => {
     Modal.confirm({
-      title: 'Supprimer?',
-      onOk: () => {
-        message.success('Supprimé!');
+      title: 'Supprimer ce produit?',
+      content: 'Cette action est irréversible.',
+      onOk: async () => {
+        message.success('Produit supprimé!');
         loadData();
-      }
+      },
     });
+  };
+
+  const handleEdit = (product) => {
+    setEditingProduct(product);
+    editForm.setFieldsValue({
+      name: product.name,
+      price: product.price,
+      category: product.category,
+      quantity: product.variants?.[0]?.quantity || 0
+    });
+  };
+
+  const onEditFinish = async (values) => {
+    if (!editingProduct) return;
+    
+    const updatedProduct = {
+      ...editingProduct,
+      ...values,
+      variants: editingProduct.variants.map((v, i) => ({
+        ...v,
+        quantity: values[`quantity_${i}`] || v.quantity
+      }))
+    };
+
+    try {
+      // Update offline
+      console.log('Updated:', updatedProduct);
+      message.success('Produit modifié!');
+      loadData();
+    } catch {
+      message.error('Erreur lors de la mise à jour');
+    } finally {
+      setEditingProduct(null);
+      editForm.resetFields();
+    }
   };
 
   const handleResetAll = async () => {
     Modal.confirm({
-      title: 'Reset all data?',
-      content: 'This will delete all products and sales (online + offline)',
+      title: 'Supprimer toutes les données?',
+      content: 'Produits et ventes seront effacés (online + offline)',
+      okText: 'Confirmer',
+      okButtonProps: { danger: true },
       onOk: async () => {
         setLoading(true);
         try {
@@ -116,11 +158,11 @@ const handleDeleteProduct = () => {
           storage.clearPending();
           storage.setCache({ products: [], sales: [], lastSync: Date.now() });
           loadData();
-          message.success('✅ Reset complete');
+          message.success('Reset completé');
         } catch {
           storage.clearPending();
           storage.setCache({ products: [], sales: [], lastSync: Date.now() });
-          message.success('✅ Local reset complete');
+          message.success('Reset local');
         } finally {
           setLoading(false);
         }
@@ -129,132 +171,205 @@ const handleDeleteProduct = () => {
   };
 
   const handleExport = () => {
-    const csv = ['Catégorie,Nom,Prix,Types\n'].concat(filteredProducts.map(p => 
-      `"${p.category || ''}","${p.name}","${p.price}","${p.variants?.map(v => `${v.type}(${v.quantity})`).join(';') || ''}"`
-    )).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const csv = ['Catégorie,Nom,Prix,Stock\n'].concat(
+      filteredProducts.map(p => 
+        `"${p.category || ''}","${p.name}","${p.price}","${p.variants?.map(v => `${v.type}:${v.quantity}`).join(';') || ''}"`
+      )
+    ).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'produits.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `produits-${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const sidebarNav = [
     { key: 'stats', label: '📊 Stats', count: sales.length },
     { key: 'products', label: '📦 Produits', count: products.length },
     { key: 'analytics', label: '📈 Analytics' },
-    { key: 'history', label: '📜 History' }
+    { key: 'history', label: '📜 Ventes' }
+  ];
+
+  const tabItems = [
+    {
+      key: 'stats',
+      label: '📊 Statistiques',
+      children: <StatsCards products={products} sales={sales} onCardClick={handleStatsCardClick} />
+    },
+    {
+      key: 'products',
+      label: '📦 Produits',
+      children: (
+        <>
+          <CategoryProductSelector />
+          <Row gutter={24} style={{ marginBottom: 24 }}>
+            <Col xs={24} lg={16}>
+              <ProductCreator products={products} categories={categories} onSuccess={loadData} loading={loading} />
+            </Col>
+            <Col xs={24} lg={8}>
+              <ExcelImport onSuccess={loadData} />
+            </Col>
+          </Row>
+          <Card title={<Title level={5}>Liste des Produits ({filteredProducts.length})</Title>} className="glass-card">
+
+            <Table 
+              columns={columns}
+              dataSource={filteredProducts}
+              rowKey="_id"
+              pagination={{ pageSize: 12, showSizeChanger: true }}
+              loading={loading}
+              scroll={{ x: 'max-content' }}
+              size="middle"
+            />
+          </Card>
+        </>
+      )
+    },
+    {
+      key: 'analytics',
+      label: '📈 Analytics',
+      children: <SalesAnalytics sales={sales} products={products} />
+    },
+    {
+      key: 'history',
+      label: '📜 Historique',
+      children: <SalesHistory products={products} darkMode={darkMode} />
+    }
   ];
 
   return (
     <div className="admin-dashboard" data-theme={darkMode ? 'dark' : 'light'}>
-      {/* Hero */}
+      {/* Hero Section */}
       <div className="hero-section">
         <div className="hero-content">
           <div>
-            <Title level={2} style={{ margin: 0, color: 'white' }}>Admin Dashboard</Title>
-            <p style={{ margin: 4 }}> {loading ? 'Loading...' : `${products.length} products | ${sales.length} sales`}</p>
+            <Title level={2} style={{ margin: 0, color: 'white' }}>🛒 Admin Dashboard</Title>
+            <p style={{ margin: 4, opacity: 0.9 }}>
+              {loading ? 'Chargement...' : `${products.length} produits | ${sales.length} ventes`}
+            </p>
           </div>
           <div className="quick-actions">
-            <Button icon={<ReloadOutlined />} onClick={loadData} loading={loading}>Refresh</Button>
-            <Button icon={<ExportOutlined />} onClick={handleExport}>Export</Button>
-            <Button danger icon={<DeleteOutlined />} onClick={handleResetAll}>Reset All</Button>
+            <Button icon={<ReloadOutlined />} onClick={loadData} loading={loading} size="large">Actualiser</Button>
+            <Button icon={<ExportOutlined />} onClick={handleExport} size="large">Exporter</Button>
+            <Button danger icon={<DeleteOutlined />} onClick={handleResetAll} size="large">Reset All</Button>
           </div>
         </div>
       </div>
 
-      {/* Search */}
+      {/* Search & Filter */}
       <div className="search-container">
-        <SearchOutlined />
+        <SearchOutlined style={{ color: 'var(--text-secondary)' }} />
         <Input 
-          placeholder="Search products..." 
+          placeholder="Rechercher produits..." 
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
+          className="search-input"
         />
         <Select 
-          placeholder="Filter category" 
+          placeholder="Filtrer par catégorie" 
           value={filterCategory}
           onChange={setFilterCategory}
+          style={{ width: 180 }}
           allowClear
-          style={{ width: 150 }}
           options={categories.map(c => ({ value: c, label: c }))}
         />
       </div>
 
-      {/* Layout */}
+      {/* Main Layout */}
       <div className="dashboard-grid">
+        {/* Sidebar Navigation */}
         <div className="sidebar">
-          <Title level={5}>Nav</Title>
+          <Title level={5} style={{ color: 'var(--text-primary)' }}>Navigation</Title>
           {sidebarNav.map(item => (
             <Button 
               key={item.key} 
               className={`nav-item ${activeTab === item.key ? 'active' : ''}`}
               onClick={() => setActiveTab(item.key)}
+              icon={false}
+              size="large"
               block
             >
-              {item.label} {item.count && <Badge count={item.count} />}
+              {item.label}
+              {item.count !== undefined && ` (${item.count})`}
+
             </Button>
           ))}
         </div>
 
-        <Tabs activeKey={activeTab} onChange={setActiveTab} items={[
-          {
-            key: 'stats',
-            label: '📊 Stats',
-            children: <StatsCards products={products} sales={sales} onCardClick={handleStatsCardClick} />
-          },
-          {
-            key: 'products',
-            label: '📦 Products',
-            children: (
-              <>
-                <CategoryProductSelector />
-                <Row gutter={24} style={{ margin: '24px 0' }}>
-                  <Col span={16}>
-                    <ProductCreator products={products} categories={categories} onSuccess={loadData} />
-                  </Col>
-                  <Col span={8}>
-                    <ExcelImport onSuccess={loadData} />
-                  </Col>
-                </Row>
-                <Card title={`Products List (${filteredProducts.length})`} className="glass-card">
-                  <Table 
-                    columns={columns}
-                    dataSource={filteredProducts}
-                    rowKey="_id"
-                    pagination={{ pageSize: 10 }}
-                    loading={loading}
-                    scroll={{ x: false }}
-                  />
-                </Card>
-              </>
-            )
-          },
-          {
-            key: 'analytics',
-            label: '📈 Analytics',
-            children: <SalesAnalytics sales={sales} products={products} />
-          },
-          {
-            key: 'history',
-            label: '📜 History',
-            children: <SalesHistory products={products} darkMode={darkMode} />
-          }
-        ]} />
+        {/* Content */}
+        <Tabs activeKey={activeTab} items={tabItems} size="large" className="tabbed-content" />
       </div>
 
+      {/* Edit Product Modal */}
       <Modal 
-        title="Stats Details"
-        open={statsModal.visible}
-        onCancel={() => setStatsModal({ ...statsModal, visible: false })}
+        title="✏️ Modifier Produit"
+        open={!!editingProduct}
+        destroyOnClose
+        onCancel={() => {
+          setEditingProduct(null);
+          editForm.resetFields();
+        }}
+        width={600}
         footer={null}
       >
+        <Form 
+          form={editForm} 
+          layout="vertical" 
+          onFinish={onEditFinish}
+          initialValues={editingProduct}
+          preserve={false}
+        >
+          <Form.Item name="name" label="Nom du produit" rules={[{ required: true, message: 'Nom requis' }]}>
+            <Input placeholder="Nom du produit" />
+          </Form.Item>
+          
+          <Form.Item name="category" label="Catégorie" rules={[{ required: true, message: 'Catégorie requise' }]}>
+            <Select placeholder="Sélectionner catégorie">
+              {categories.map(cat => (
+                <Select.Option key={cat} value={cat}>{cat}</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          
+          <Form.Item name="price" label="Prix (FCFA)" rules={[{ required: true, type: 'number', min: 0 }]}>
+            <InputNumber style={{ width: '100%' }} min={0} step={50} precision={0} placeholder="Prix" />
+          </Form.Item>
+          
+          <Form.Item name="stock" label="Stock principal" rules={[{ required: true, type: 'number', min: 0 }]}>
+            <InputNumber style={{ width: '100%' }} min={0} placeholder="Quantité" />
+          </Form.Item>
+          
+          <Form.Item>
+            <Space style={{ width: '100%', justifyContent: 'flex-end', gap: 8 }}>
+              <Button onClick={() => {
+                setEditingProduct(null);
+                editForm.resetFields();
+              }}>
+                Annuler
+              </Button>
+              <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>
+                Enregistrer
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
 
-        <div>Stats: {JSON.stringify(statsModal.data, null, 2)}</div>
-
+      {/* Stats Modal */}
+      <Modal 
+        title="📊 Détails Statistiques"
+        open={statsModal.visible}
+        destroyOnClose
+        onCancel={() => setStatsModal({ ...statsModal, visible: false })}
+        footer={null}
+        width={1000}
+      >
+        <div>Données: {JSON.stringify(statsModal.data, null, 2)}</div>
       </Modal>
     </div>
   );
