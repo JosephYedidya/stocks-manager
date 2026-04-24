@@ -8,13 +8,13 @@ export default function StatsCards({ products, sales, onCardClick }) {
   const safeSales = sales || [];
   const safeProducts = products || [];
 
-  // Enhanced data for modals
+// Enhanced data for modals (safe values)
   const revenueData = safeSales.slice(0, 10).map(sale => ({
-    key: sale._id,
-    product: sale.productName,
-    qty: sale.quantity,
-    price: sale.productPrice,
-    total: sale.quantity * sale.productPrice,
+    key: sale._id || 'N/A',
+    product: sale.productName || 'Inconnu',
+    qty: sale.quantity || 0,
+    price: sale.productPrice || 0,
+    total: (sale.quantity || 0) * (sale.productPrice || 0),
   }));
 
   const lowStockProducts = safeProducts.filter(p => 
@@ -22,10 +22,9 @@ export default function StatsCards({ products, sales, onCardClick }) {
   );
 
   const totalRevenue = safeSales.reduce((sum, sale) => {
-    if (!sale.productId || !sale.quantity) return sum;
-    const product = safeProducts.find(p => p._id === sale.productId);
-    if (!product?.price) return sum;
-    return sum + (product.price * sale.quantity);
+    const price = sale.productPrice || 0;
+    const qty = sale.quantity || 0;
+    return sum + (price * qty);
   }, 0);
 
   const totalSales = safeSales.length;
@@ -39,8 +38,9 @@ export default function StatsCards({ products, sales, onCardClick }) {
   }, 0);
 
   const topProductCounts = safeSales.reduce((acc, sale) => {
-    if (!sale.productId) return acc;
-    acc[sale.productId] = (acc[sale.productId] || 0) + (sale.quantity || 1);
+    const productId = sale.productId || sale._id || 'unknown';
+    const qty = sale.quantity || 1;
+    acc[productId] = (acc[productId] || 0) + qty;
     return acc;
   }, {});
 
@@ -48,7 +48,7 @@ export default function StatsCards({ products, sales, onCardClick }) {
     ? Object.keys(topProductCounts).reduce((a, b) => topProductCounts[a] > topProductCounts[b] ? a : b)
     : null;
   const topProductName = topProductId 
-    ? safeProducts.find(p => p._id === topProductId)?.name || 'Aucun'
+    ? safeProducts.find(p => p._id === topProductId)?.name || topProductId || 'Aucun'
     : 'Aucun';
   const topProductQuantity = topProductId ? topProductCounts[topProductId] : 0;
 
@@ -68,7 +68,7 @@ export default function StatsCards({ products, sales, onCardClick }) {
         {/* Revenue */}
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card 
-            className="stats-card revenue-card"
+            className="stats-card revenue-card glass-card"
             hoverable
             onClick={() => onCardClick('revenue', { totalRevenue, revenueData })}
           >
@@ -88,7 +88,7 @@ export default function StatsCards({ products, sales, onCardClick }) {
         {/* Sales */}
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card 
-            className="stats-card sales-card"
+            className="stats-card sales-card glass-card"
             hoverable
             onClick={() => onCardClick('sales', { totalSales, salesData: safeSales.slice(0,10) })}
           >
@@ -108,7 +108,7 @@ export default function StatsCards({ products, sales, onCardClick }) {
         {/* Stock */}
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card 
-            className="stats-card stock-card"
+            className="stats-card stock-card glass-card"
             hoverable
             onClick={() => onCardClick('stock', { stockValue, lowStockProducts, allProducts: safeProducts })}
           >
@@ -128,7 +128,7 @@ export default function StatsCards({ products, sales, onCardClick }) {
         {/* Top Product */}
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card 
-            className="stats-card top-product-card"
+            className="stats-card top-product-card glass-card"
             hoverable
             onClick={() => onCardClick('topProduct', { topProductName, topProductQuantity, pieData: topProductsPie })}
           >

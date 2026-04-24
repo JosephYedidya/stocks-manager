@@ -214,8 +214,7 @@ const handleDelete = () => {
               <ExcelImport onSuccess={loadData} />
             </Col>
           </Row>
-          <Card title={<Title level={5}>Liste des Produits ({filteredProducts.length})</Title>} className="glass-card">
-
+          <Card title={<Title level={5}>Liste des Produits ({filteredProducts.length})</Title>} className="glass-card" style={{ wdith: '95%', maxWidth: 1200, margin: '0'}}>
             <Table 
               columns={columns}
               dataSource={filteredProducts}
@@ -362,14 +361,54 @@ const handleDelete = () => {
 
       {/* Stats Modal */}
       <Modal 
-        title="📊 Détails Statistiques"
+        title={`📊 Détails: ${statsModal.type.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}`}
         open={statsModal.visible}
         destroyOnClose
         onCancel={() => setStatsModal({ ...statsModal, visible: false })}
         footer={null}
         width={1000}
       >
-        <div>Données: {JSON.stringify(statsModal.data, null, 2)}</div>
+        {statsModal.type === 'revenue' && (
+          <div>
+            <Typography.Title level={4}>Chiffre d'affaires Total: {statsModal.data.totalRevenue?.toLocaleString('fr-FR')} FCFA</Typography.Title>
+            <Table 
+              columns={[
+                { title: 'Produit', dataIndex: 'product', key: 'product' },
+                { title: 'Qté', dataIndex: 'qty', key: 'qty' },
+                { title: 'Prix', dataIndex: 'price', key: 'price', render: (p) => `${p.toLocaleString('fr-FR')} FCFA` },
+                { title: 'Total', dataIndex: 'total', key: 'total', render: (t) => `${t.toLocaleString('fr-FR')} FCFA` }
+              ]}
+              dataSource={statsModal.data.revenueData || []}
+              pagination={{ pageSize: 10 }}
+              rowKey="key"
+              size="small"
+            />
+          </div>
+        )}
+        {statsModal.type === 'sales' && (
+          <div>
+            <Typography.Title level={4}>Total Transactions: {statsModal.data.totalSales || 0}</Typography.Title>
+            <p>Récemment ventes...</p>
+            {/* Add Table if salesData provided */}
+          </div>
+        )}
+        {statsModal.type === 'stock' && (
+          <div>
+            <Typography.Title level={4}>Valeur Stock: {statsModal.data.stockValue?.toLocaleString('fr-FR')} FCFA</Typography.Title>
+            <Typography.Title level={5}>Produits bas stock ({statsModal.data.lowStockProducts?.length || 0}):</Typography.Title>
+            <ul>
+              {statsModal.data.lowStockProducts?.map(p => (
+                <li key={p._id}>{p.name} - Stocks bas</li>
+              )) || 'Aucun'}
+            </ul>
+          </div>
+        )}
+        {statsModal.type === 'topProduct' && (
+          <div>
+            <Typography.Title level={4}>Top Produit: {statsModal.data.topProductName} ({statsModal.data.topProductQuantity} unités)</Typography.Title>
+            <p>Meilleur vendeur.</p>
+          </div>
+        )}
       </Modal>
     </div>
   );

@@ -144,7 +144,7 @@ export default function SalesHistory({ products = [], darkMode }) {
         background: cardBg,
         border: `1px solid ${borderColor}`,
         boxShadow: shadow,
-        wdith: '95%',
+        wdith: '100%',
         maxWidth: 1200,
         margin: '24px auto'
       }}

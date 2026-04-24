@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AntDesignOutlined } from '@ant-design/icons';
 import { Layout, Button, ConfigProvider, theme, message, Space, Badge } from 'antd';
 import { DownloadOutlined, WifiOutlined } from '@ant-design/icons';
 import { OfflineProvider, useOffline } from './context/OfflineContext.jsx';
@@ -207,7 +208,7 @@ function AdminHeader({ user, appTheme, setAppTheme, onLogout }) {
         overflow: 'hidden',
         textOverflow: 'ellipsis'
       }}>
-        🛍️ ecommerce
+        Stocks manager +
       </h1>
 
       <div style={{

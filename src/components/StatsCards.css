@@ -135,7 +135,10 @@
   animation: pulse 1.5s infinite;
 }
 
-/* Integration with AdminDashboard glass theme */
 .stats-card {
-  composes: glass-card from './AdminDashboard.css';
+  /* Glassmorphism styles integrated from AdminDashboard.css */
+  background: var(--glass-bg, rgba(255, 255, 255, 0.25));
+  backdrop-filter: var(--glass-backdrop, blur(10px));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.18));
+  box-shadow: var(--glass-shadow, 0 8px 32px 0 rgba(31, 38, 135, 0.37));
 }

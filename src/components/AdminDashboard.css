@@ -20,16 +20,60 @@
   --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
-  --border-radius: 20px;<div class="ant-card ant-card-bordered glass-card css-dev-only-do-not-override-ch9ese css-var-_r_0_">
+  --border-radius: 20px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme='dark'] {
-  --glass-bg: rgba(55, 65, 81, 0.4);
-  --glass-border: rgba(75, 85, 99, 0.3);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
+  --glass-bg: rgba(31, 41, 55, 0.6);
+  --glass-border: rgba(75, 85, 99, 0.4);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+}
+
+[data-theme='dark'] .admin-dashboard {
+  background: #0f172a;
+}
+
+[data-theme='dark'] .hero-section {
+  background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+}
+
+[data-theme='dark'] .sidebar {
+  background: rgba(17, 24, 39, 0.7);
+  border-color: rgba(75, 85, 99, 0.4);
+}
+
+[data-theme='dark'] .nav-item {
+  color: #d1d5db;
+}
+
+[data-theme='dark'] .nav-item:hover,
+[data-theme='dark'] .nav-item.active {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+[data-theme='dark'] .glass-card::before {
+  opacity: 0.3;
+}
+
+[data-theme='dark'] .search-container {
+  background: rgba(17, 24, 39, 0.6);
+}
+
+[data-theme='dark'] .ant-table-thead > tr > th {
+  background: rgba(17, 24, 39, 0.8) !important;
+  color: #f3f4f6;
+}
+
+[data-theme='dark'] .ant-tabs-tab {
+  color: #d1d5db;
+}
+
+[data-theme='dark'] .ant-tabs-tab-active {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%) !important;
 }
 
 /* Layout */
