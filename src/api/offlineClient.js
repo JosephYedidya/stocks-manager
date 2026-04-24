@@ -24,7 +24,39 @@ export const offlineApi = {
 
     try {
       const res = await getSales();
-      sales = res.data;
+      const serverSales = res.data || [];
+      // Normalize server sales: ensure productId exists even if server returns `product`
+      const normalizedServerSales = serverSales.map(sale => {
+        const productId = sale.productId || (typeof sale.product === 'string' ? sale.product : sale.product?._id);
+        const serverProductName = typeof sale.product === 'object' ? sale.product?.name : undefined;
+        const serverProductPrice = typeof sale.product === 'object' ? sale.product?.price : undefined;
+        return {
+          ...sale,
+          productId: productId || sale.productId,
+          productName: sale.productName || serverProductName || undefined,
+          productPrice: sale.productPrice || serverProductPrice || undefined,
+        };
+      });
+      // Merge server data with local cache to preserve product details
+      const localSalesMap = new Map(sales.map(s => [s._id, s]));
+      const mergedSales = normalizedServerSales.map(serverSale => {
+        const localSale = localSalesMap.get(serverSale._id);
+        if (localSale) {
+          return {
+            ...localSale,
+            ...serverSale,
+            productName: serverSale.productName || localSale.productName,
+            productPrice: serverSale.productPrice || localSale.productPrice,
+            variantType: serverSale.variantType || localSale.variantType,
+          };
+        }
+        return serverSale;
+      });
+      // Keep any local-only sales that haven't been synced yet
+      const serverIds = new Set(normalizedServerSales.map(s => s._id));
+      const localOnlySales = sales.filter(s => !serverIds.has(s._id));
+      sales = [...mergedSales, ...localOnlySales];
+      
       storage.setCache({ ...cache, sales });
       console.log('✅ Sales synced from network');
     } catch {
@@ -45,7 +77,24 @@ export const offlineApi = {
     try {
       const res = await recordSale(saleData);
       const realSale = res.data;
-      const newSales = updatedSales.map(s => s._id === localSale._id ? { ...s, ...realSale, synced: true } : s);
+      // Normalize server response product reference
+      const serverProductId = realSale.productId || (typeof realSale.product === 'string' ? realSale.product : realSale.product?._id);
+      const serverProductName = typeof realSale.product === 'object' ? realSale.product?.name : undefined;
+      const serverProductPrice = typeof realSale.product === 'object' ? realSale.product?.price : undefined;
+      const normalizedRealSale = {
+        ...realSale,
+        productId: serverProductId || realSale.productId,
+        productName: realSale.productName || serverProductName || undefined,
+        productPrice: realSale.productPrice || serverProductPrice || undefined,
+      };
+      const newSales = updatedSales.map(s => s._id === localSale._id ? {
+        ...s,
+        ...normalizedRealSale,
+        productName: normalizedRealSale.productName || s.productName,
+        productPrice: normalizedRealSale.productPrice || s.productPrice,
+        variantType: normalizedRealSale.variantType || s.variantType,
+        synced: true
+      } : s);
       storage.setCache({ ...cache, sales: newSales });
       storage.removePending(tx.id);
     } catch {

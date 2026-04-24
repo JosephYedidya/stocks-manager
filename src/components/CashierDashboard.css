@@ -1,0 +1,151 @@
+/* ===== CashierDashboard Layout Styles ===== */
+/* NOTE: Dark/light colors are handled by Ant Design ConfigProvider in App.jsx.
+   Only structural / decorative styles belong here. */
+
+.cashier-dashboard {
+  padding-bottom: 120px;
+  position: relative;
+}
+
+.cashier-dashboard .dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header Section */
+.cashier-dashboard .dashboard-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+}
+
+.cashier-dashboard .dashboard-header h2 {
+  margin: 0;
+  font-weight: 700;
+}
+
+.cashier-dashboard .dashboard-header p {
+  font-size: 16px;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+/* Stats Cards */
+.cashier-dashboard .stats-grid {
+  margin-bottom: 32px;
+}
+
+.cashier-dashboard .stat-card {
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.cashier-dashboard .stat-card:hover {
+  transform: translateY(-4px);
+}
+
+.cashier-dashboard .stat-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+/* Sale Form Card */
+.cashier-dashboard .sale-form-card {
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.cashier-dashboard .sale-form-card .ant-card-head-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.cashier-dashboard .sale-form-divider {
+  margin: 32px 0;
+}
+
+.cashier-dashboard .sale-total-display .ant-statistic-title {
+  font-size: 14px;
+}
+
+.cashier-dashboard .sale-total-display .ant-statistic-content {
+  font-size: 24px;
+}
+
+/* Finalize Sale Button */
+.cashier-dashboard .finalize-btn {
+  width: 320px;
+  height: 64px;
+  font-size: 20px;
+  font-weight: 600;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+  color: white !important;
+  transition: all 0.3s ease;
+}
+
+.cashier-dashboard .finalize-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px rgba(16, 185, 129, 0.5);
+}
+
+/* Receipt Card */
+.cashier-dashboard .receipt-card {
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+/* Inventory Card */
+.cashier-dashboard .inventory-card {
+  border-radius: 16px;
+}
+
+.cashier-dashboard .inventory-card .ant-card-head-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Status Bar */
+.cashier-dashboard .status-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  border-radius: 16px;
+  padding: 12px 24px;
+  min-width: 300px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+/* Product Table */
+.cashier-dashboard .product-table {
+  margin-top: 16px;
+}
+
+.cashier-dashboard .product-table .ant-table-thead > tr > th {
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cashier-dashboard .finalize-btn {
+    width: 100% !important;
+    max-width: 320px;
+  }
+
+  .cashier-dashboard .status-bar {
+    min-width: 260px;
+    padding: 10px 16px;
+  }
+}
+

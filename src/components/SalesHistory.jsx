@@ -1,37 +1,75 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Table, Card, Button, Empty, Tag, Typography } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { getSalesOffline } from '../api/offlineClient.js';
 
 const { Text } = Typography;
 
+// Helper: treat 'N/A', empty string, null, undefined as invalid
+const validStr = (v) => (v && v !== 'N/A' && String(v).trim() !== '') ? String(v).trim() : undefined;
+const validNum = (v) => {
+  const n = Number(v);
+  return (!isNaN(n) && n > 0) ? n : undefined;
+};
+
 export default function SalesHistory({ products = [], darkMode }) {
   const isDark = darkMode === 'dark';
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const loadSales = async () => {
+  const getProductId = (sale) => {
+    if (sale.productId) return sale.productId;
+    if (typeof sale.product === 'string') return sale.product;
+    if (sale.product && typeof sale.product === 'object') return sale.product._id;
+    return undefined;
+  };
+
+  const loadSales = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getSalesOffline();
-      const enrichedData = (res.data || []).map(sale => ({
-        ...sale,
-        productName: sale.productName || 'N/A',
-        productPrice: Number(sale.productPrice || 0),
-        quantity: Number(sale.quantity || 0)
-      }));
+      console.log('[SalesHistory] raw sales count:', (res.data || []).length);
+      console.log('[SalesHistory] products available:', products.length);
+
+      const enrichedData = (res.data || []).map((sale, idx) => {
+        const productId = getProductId(sale);
+        const product = products.find(p => p._id === productId);
+
+        // Server may return populated product object
+        const serverProductName = typeof sale.product === 'object' ? sale.product?.name : undefined;
+        const serverProductPrice = typeof sale.product === 'object' ? sale.product?.price : undefined;
+
+        const resolvedName = validStr(sale.productName) || validStr(serverProductName) || validStr(product?.name);
+        const resolvedPrice = validNum(sale.productPrice) || validNum(serverProductPrice) || validNum(product?.price) || 0;
+        const resolvedVariant = validStr(sale.variantType) || validStr(product?.variants?.[0]?.type);
+
+        if (idx < 3) {
+          console.log('[SalesHistory] sale', sale._id?.slice(-6), {
+            productId, productFound: !!product, resolvedName, resolvedPrice, resolvedVariant
+          });
+        }
+
+        return {
+          ...sale,
+          productId: productId || sale.productId,
+          productName: resolvedName,
+          productPrice: resolvedPrice,
+          variantType: resolvedVariant,
+          quantity: Number(sale.quantity || 0)
+        };
+      });
       setSales(enrichedData);
-    } catch {
-      console.log('Using cached sales (offline)');
+    } catch (err) {
+      console.log('Using cached sales (offline)', err);
       setSales([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [products]);
 
   useEffect(() => {
     loadSales();
-  }, []);
+  }, [loadSales]);
 
   const textColor = isDark ? '#f9fafb' : '#111827';
   const cardBg = isDark ? '#374151' : 'white';
@@ -46,10 +84,13 @@ export default function SalesHistory({ products = [], darkMode }) {
       width: 180,
       fixed: 'left',
       render: (name, record) => {
-        const product = products.find(p => p._id === record.productId);
+        const productId = record.productId || (typeof record.product === 'string' ? record.product : record.product?._id);
+        const product = products.find(p => p._id === productId);
+        const serverProductName = typeof record.product === 'object' ? record.product?.name : undefined;
+        const displayName = validStr(name) || validStr(serverProductName) || validStr(product?.name) || 'N/A';
         return (
           <Text style={{ color: textColor, fontWeight: 500 }} ellipsis={{ tooltip: true }}>
-            {name || product?.name || 'N/A'}
+            {displayName}
           </Text>
         );
       }
@@ -145,7 +186,7 @@ export default function SalesHistory({ products = [], darkMode }) {
         border: `1px solid ${borderColor}`,
         boxShadow: shadow,
         wdith: '100%',
-        maxWidth: 1200,
+        maxWidth: 1100,
         margin: '24px auto'
       }}
       extra={

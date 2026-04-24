@@ -28,6 +28,7 @@ import Receipt from './Receipt';
 import SalesHistory from './SalesHistory';
 import { getProductsOffline, recordSaleOffline, syncPending } from '../api/offlineClient.js';
 import { useOffline } from '../context/OfflineContext.jsx';
+import './CashierDashboard.css';
 
 const { Title, Text } = Typography;
 
@@ -63,7 +64,7 @@ export default function CashierDashboard({ darkMode }) {
 
   const handleManualSync = async () => {
     if (!isOnline || pendingCount === 0) return;
-    
+
     setSyncLoading(true);
     try {
       await syncPending();
@@ -85,7 +86,7 @@ export default function CashierDashboard({ darkMode }) {
   const totalPrice = (currentProduct?.price || 0) * quantity;
   const handleSale = async () => {
     if (!selectedProduct || !selectedVariant || quantity < 1) return message.error('Sélection complète requise');
-    
+
     setLoading(true);
     try {
       const saleData = {
@@ -96,10 +97,10 @@ export default function CashierDashboard({ darkMode }) {
         quantity,
         soldBy: localStorage.getItem('userEmail')
       };
-      
+
       await recordSaleOffline(saleData);
       message.success('✅ Vente enregistrée!');
-      
+
       setCurrentSale(saleData);
       setShowReceipt(true);
       setQuantity(1);
@@ -111,12 +112,7 @@ export default function CashierDashboard({ darkMode }) {
     }
   };
 
-  const bgColor = isDark ? '#1f2937' : '#fafbfc';
-  const cardBg = isDark ? '#374151' : 'white';
-  const textColor = isDark ? '#f9fafb' : '#111827';
-  const borderColor = isDark ? '#4b5563' : '#e5e7eb';
-  const shadow = isDark ? '0 4px 20px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.08)';
-
+  // Stat card configs (colors remain dynamic)
   const statsCards = [
     {
       title: 'Produits',
@@ -127,7 +123,7 @@ export default function CashierDashboard({ darkMode }) {
     {
       title: 'Catégories',
       value: categories.length,
-      icon: <Tag style={{ color: isDark ? '#4ade80' : '#52c41a', fontSize: 24 }} />,
+      icon: <Tag style={{ color: isDark ? '#4ade80' : '#52c41a', fontSize: 24, background: 'none', border: 'none' }} />,
       color: isDark ? '#4ade80' : '#52c41a'
     },
     {
@@ -150,7 +146,7 @@ export default function CashierDashboard({ darkMode }) {
       dataIndex: 'name',
       key: 'name',
       render: name => (
-        <div style={{ fontWeight: 600, color: textColor }}>
+        <div style={{ fontWeight: 600 }}>
           {name}
         </div>
       )
@@ -160,7 +156,7 @@ export default function CashierDashboard({ darkMode }) {
       dataIndex: 'price',
       key: 'price',
       render: price => (
-        <Text strong style={{ color: isDark ? '#4ade80' : '#52c41a', fontSize: '16px' }}>
+        <Text strong style={{ fontSize: '16px' }}>
           {price.toLocaleString()} FCFA
         </Text>
       )
@@ -172,10 +168,10 @@ export default function CashierDashboard({ darkMode }) {
       render: variants => (
         <Space size="small">
           {variants.map(v => (
-            <Tag 
+            <Tag
               key={v.type}
               color={v.quantity > 0 ? 'success' : 'error'}
-              style={{ fontSize: '12px', color: textColor }}
+              style={{ fontSize: '12px' }}
             >
               {v.type}: {v.quantity}
             </Tag>
@@ -186,39 +182,23 @@ export default function CashierDashboard({ darkMode }) {
   ];
 
   return (
-    <div style={{ 
-      minHeight: '100vh',
-      background: bgColor,
-      color: textColor,
-      padding: '24px 24px 120px',
-      position: 'relative'
-    }}>
-      {/* Main Status Bar - Bottom Center */}
-      <div style={{
-        position: 'fixed',
-        bottom: 24,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 1000,
-        background: cardBg,
-        borderRadius: 16,
-        padding: '12px 24px',
-        boxShadow: shadow,
-        border: `1px solid ${borderColor}`,
-        minWidth: 300,
-        textAlign: 'center'
-      }}>
+    <div
+      className="cashier-dashboard"
+      data-theme={isDark ? 'dark' : 'light'}
+    >
+      {/* Status Bar - Bottom Center */}
+      <div className="status-bar">
         <Space size="middle">
           <WifiOutlined style={{ fontSize: 20, color: isOnline ? '#10b981' : '#ef4444' }} />
-          <Text strong style={{ fontSize: 16, color: textColor }}>
+          <Text strong style={{ fontSize: 16 }}>
             {isOnline ? 'Connecté' : 'Hors ligne'}
           </Text>
           {pendingCount > 0 ? (
             <Space.Compact>
               <Spin size="small" spinning={syncLoading} />
-              <Button 
-                type="primary" 
-                size="small" 
+              <Button
+                type="primary"
+                size="small"
                 loading={syncLoading}
                 onClick={handleManualSync}
                 style={{ borderRadius: 8 }}
@@ -227,58 +207,37 @@ export default function CashierDashboard({ darkMode }) {
               </Button>
             </Space.Compact>
           ) : (
-            <Text style={{ fontSize: 14, color: isDark ? '#d1d5db' : '#6b7280' }}>Tout à jour</Text>
+            <Text style={{ fontSize: 14 }}>Tout à jour</Text>
           )}
         </Space>
       </div>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <div className="dashboard-container">
         {/* Header */}
-        <div style={{ 
-          textAlign: 'center', 
-          marginBottom: 32, 
-          paddingBottom: 24, 
-          borderBottom: `1px solid ${borderColor}` 
-        }}>
-          <Title level={2} style={{ margin: 0, color: textColor }}>
+        <div className="dashboard-header">
+          <Title level={2} style={{ margin: 0 }}>
             💰 Point de Vente Rapide
           </Title>
-          <Text style={{ fontSize: 16, color: isDark ? '#d1d5db' : '#6b7280' }}>
-            Interface optimisée pour les caissiers
-          </Text>
+          <p>Interface optimisée pour les caissiers</p>
         </div>
 
         {/* Stats Cards */}
-        <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>
+        <Row gutter={[20, 20]} className="stats-grid">
           {statsCards.map((stat, index) => (
             <Col xs={12} sm={12} md={6} key={index}>
-              <Card 
+              <Card
                 hoverable
-                style={{
-                  borderRadius: 16,
-                  border: `1px solid ${borderColor}`,
-                  background: cardBg,
-                  color: textColor,
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                  boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.5)' : '0 1px 3px rgba(0,0,0,0.1)'
-                }}
+                className="stat-card"
               >
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ 
-                    width: 64, 
-                    height: 64, 
-                    borderRadius: 16, 
-                    background: stat.color + (isDark ? '24' : '12'),
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 20px'
-                  }}>
+                  <div
+                    className="stat-icon-wrapper"
+                    style={{ background: stat.color + (isDark ? '24' : '12') }}
+                  >
                     {stat.icon}
                   </div>
                   <Statistic
-                    title={<span style={{ color: isDark ? '#d1d5db' : '#6b7280', fontSize: 14 }}>{stat.title}</span>}
+                    title={stat.title}
                     value={stat.value}
                     valueStyle={{ color: stat.color, fontSize: isDark ? '22px' : '24px' }}
                   />
@@ -290,20 +249,13 @@ export default function CashierDashboard({ darkMode }) {
 
         {/* Sale Form */}
         <Card
-          title={(
-            <Space style={{ color: textColor }}>
+          title={
+            <Space>
               <ShoppingOutlined style={{ color: '#10b981', fontSize: 20 }} />
               <span style={{ fontSize: 18, fontWeight: 600 }}>Nouvelle Vente</span>
             </Space>
-          )}
-          style={{
-            borderRadius: 16,
-            marginBottom: 24,
-            border: `1px solid ${borderColor}`,
-            background: cardBg,
-            color: textColor,
-            boxShadow: shadow
-          }}
+          }
+          className="sale-form-card"
         >
           <Row gutter={[16, 16]}>
             <Col span={6}>
@@ -354,11 +306,12 @@ export default function CashierDashboard({ darkMode }) {
                 value={totalPrice}
                 precision={0}
                 prefix="FCFA"
+                className="sale-total-display"
                 valueStyle={{ color: '#10b981', fontSize: '24px' }}
               />
             </Col>
           </Row>
-          <Divider style={{ margin: '32px 0', borderColor: borderColor }} />
+          <Divider className="sale-form-divider" />
           <div style={{ textAlign: 'center' }}>
             <Button
               type="primary"
@@ -366,16 +319,9 @@ export default function CashierDashboard({ darkMode }) {
               loading={loading}
               onClick={handleSale}
               icon={<ShoppingOutlined />}
+              className="finalize-btn"
               style={{
-                width: 320,
-                height: 64,
-                fontSize: 20,
-                fontWeight: 600,
                 background: isDark ? '#059669' : '#10b981',
-                border: 'none',
-                borderRadius: 16,
-                boxShadow: '0 10px 30px rgba(16,185,129,0.4)',
-                color: 'white'
               }}
             >
               💳 FINALISER LA VENTE
@@ -384,36 +330,23 @@ export default function CashierDashboard({ darkMode }) {
         </Card>
 
         {showReceipt && (
-          <Card 
-            title="🧾 Reçu de Vente" 
-            style={{ 
-              marginBottom: 24, 
-              borderRadius: 16,
-              background: cardBg,
-              color: textColor,
-              border: `1px solid ${borderColor}`,
-              boxShadow: shadow
-            }}
+          <Card
+            title="🧾 Reçu de Vente"
+            className="receipt-card"
           >
             <Receipt sale={currentSale} onClose={() => setShowReceipt(false)} />
           </Card>
         )}
 
         {/* Inventory Table */}
-        <Card 
-          title={(
-            <Space style={{ color: textColor }}>
+        <Card
+          title={
+            <Space>
               📦 Inventaire
-              <Tag style={{ color: textColor }}>{products.length} produits</Tag>
+              <Tag>{products.length} produits</Tag>
             </Space>
-          )} 
-          style={{ 
-            borderRadius: 16, 
-            background: cardBg,
-            color: textColor,
-            border: `1px solid ${borderColor}`,
-            boxShadow: shadow 
-          }}
+          }
+          className="inventory-card"
         >
           <Tabs
             activeKey={selectedCategory}
@@ -430,7 +363,7 @@ export default function CashierDashboard({ darkMode }) {
                   rowKey="_id"
                   pagination={{ pageSize: 10, position: ['bottomCenter'] }}
                   size="middle"
-                  style={{ marginTop: 16 }}
+                  className="product-table"
                   rowHoverable
                 />
               ) : (
@@ -445,4 +378,3 @@ export default function CashierDashboard({ darkMode }) {
     </div>
   );
 }
-
